@@ -1,0 +1,32 @@
+https-portal:
+  image: steveltn/https-portal:1
+  volumes:
+    - /data/ssl_certs:/var/lib/https-portal
+  ports:
+    - "80:80"
+    - "443:443"
+  links:
+    - gitlab
+  restart: always
+  environment:
+    DOMAINS: "${GITLAB_DOMAIN} -> https://gitlab/"
+    STAGE: 'production'
+gitlab:
+    image: gitlab/gitlab-ce:latest
+    hostname: gitlab.marufeuille.dev
+    environment:
+        GITLAB_OMNIBUS_CONFIG: |
+            external_url 'https://gitlab.marufeuille.dev'
+            gitlab_rails['db_username'] = "${DB_USERNAME}"
+            gitlab_rails['db_password'] = "${DB_PASSWORD}"
+            gitlab_rails['db_database'] = "${DB_DBNAME}"
+            gitlab_rails['db_host'] = "${DB_HOST}"
+            gitlab_rails['db_port'] = "${DB_PORT}"
+            gitlab_rails['redis_host'] = "${REDIS_HOST}"
+            gitlab_rails['redis_port'] = "${REDIS_PORT}"
+            gitlab_rails['redis_password'] = "${REDIS_PASSWORD}"
+    volumes:
+        - ${GITLAB_HOME}/config:/etc/gitlab
+        - ${GITLAB_HOME}/logs:/var/log/gitlab
+        - ${GITLAB_HOME}/data:/var/opt/gitlab
+    restart: always
